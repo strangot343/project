@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paneles de Visualización 2x2</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Leaflet.js for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            height: 100vh;
+        }
+        .chart-container, #map {
+            width: 100%;
+            height: 100%;
+        }
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Panel 1: Gráfico de Pastel -->
+        <div class="chart-container">
+            <canvas id="genderPieChart"></canvas>
+        </div>
+
+        <!-- Panel 2: Mapa -->
+        <div id="map"></div>
+
+        <!-- Panel 3: Gráfico de Líneas -->
+        <div class="chart-container">
+            <canvas id="ageLineChart"></canvas>
+        </div>
+
+        <!-- Panel 4: Gráfico de Barras Apiladas -->
+        <div class="chart-container">
+            <canvas id="educationBarChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Panel 1: Gráfico de Pastel
+        const ctxPie = document.getElementById('genderPieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: {
+                labels: ['Male', 'Female'], // Etiquetas de ejemplo
+                datasets: [{
+                    data: [60, 40], // Datos de ejemplo
+                    backgroundColor: ['#FF6384', '#36A2EB']
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const dataset = tooltipItem.dataset;
+                                const total = dataset.data.reduce((acc, value) => acc + value, 0);
+                                const currentValue = dataset.data[tooltipItem.dataIndex];
+                                const percentage = ((currentValue / total) * 100).toFixed(2);
+                                return `${tooltipItem.label}: ${currentValue} (${percentage}%)`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+
+        // Panel 2: Mapa
+        const map = L.map('map').setView([51.505, -0.09], 2); // Coordenadas de ejemplo
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Añade datos de ejemplo al mapa
+        L.geoJSON([
+            // Aquí puedes añadir datos GeoJSON con el conteo de respuestas
+        ]).addTo(map);
+
+        // Panel 3: Gráfico de Líneas
+        const ctxLine = document.getElementById('ageLineChart').getContext('2d');
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: ['20-30', '31-40', '41-50', '51-60'], // Etiquetas de ejemplo
+                datasets: [{
+                    label: 'Respondent Count',
+                    data: [20, 40, 35, 50], // Datos de ejemplo
+                    borderColor: '#FF5733',
+                    backgroundColor: 'rgba(255, 87, 51, 0.2)',
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `${tooltipItem.label}: ${tooltipItem.raw}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Age Group'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Panel 4: Gráfico de Barras Apiladas
+        const ctxBar = document.getElementById('educationBarChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: ['Male', 'Female'], // Etiquetas de ejemplo
+                datasets: [{
+                    label: 'High School',
+                    data: [30, 25], // Datos de ejemplo
+                    backgroundColor: '#FF6384',
+                    stack: 'stack0'
+                }, {
+                    label: 'Undergraduate',
+                    data: [40, 45], // Datos de ejemplo
+                    backgroundColor: '#36A2EB',
+                    stack: 'stack0'
+                }, {
+                    label: 'Postgraduate',
+                    data: [20, 30], // Datos de ejemplo
+                    backgroundColor: '#FFCE56',
+                    stack: 'stack0'
+                }]
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+                            }
+                        }
+                    },
+                    legend: {
+                        display: true
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Gender'
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

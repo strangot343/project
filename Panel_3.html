@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualización de Datos</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 20px; /* Espacio entre paneles */
+        }
+        .panel {
+            width: calc(50% - 20px); /* Ajuste para el espaciado */
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden; /* Asegura que los elementos no se salgan del panel */
+            background: #fff; /* Fondo blanco para mejorar visibilidad */
+        }
+        canvas, #treeMap, #bubbleChart {
+            width: 100%;
+            height: 300px; /* Altura ajustada para consistencia */
+        }
+        h3 {
+            font-size: 1rem;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-weight: bold; /* Resalta el título */
+        }
+        .title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+            width: calc(100% - 20px);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        .title-bottom {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+            border-radius: 5px;
+            text-align: center;
+            width: calc(100% - 20px);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Panel 1: Bar Chart -->
+    <div class="panel">
+        <canvas id="barChart"></canvas>
+        <h3>Top 10 Lenguajes Deseados el Próximo Año</h3>
+    </div>
+
+    <!-- Panel 2: Column Chart -->
+    <div class="panel">
+        <canvas id="columnChart"></canvas>
+        <h3>Top 10 Bases de Datos Deseadas el Próximo Año</h3>
+    </div>
+
+    <!-- Panel 3: Tree Map -->
+    <div class="panel">
+        <div id="treeMap"></div>
+        <div class="title-bottom">Plataformas Deseadas el Próximo Año</div>
+    </div>
+
+    <!-- Panel 4: Hierarchy Bubble Chart -->
+    <div class="panel">
+        <div id="bubbleChart"></div>
+        <div class="title">Top 10 Marcos Web Deseados el Próximo Año</div>
+    </div>
+
+    <script>
+        // Panel 1: Bar Chart
+        new Chart(document.getElementById('barChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['JavaScript', 'Python', 'Java', 'C#', 'C++', 'TypeScript', 'PHP', 'Swift', 'Ruby', 'Go'],
+                datasets: [{
+                    label: 'Deseo',
+                    data: [90, 85, 80, 70, 60, 55, 50, 45, 40, 35],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCC99', '#C9CBCF', '#FFB6C1', '#FFD700']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: context => context.raw } },
+                    datalabels: {
+                        display: true,
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: value => value,
+                        color: '#000'
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { beginAtZero: true }
+                },
+                plugins: { title: { display: true, text: 'Top 10 Lenguajes Deseados el Próximo Año' } }
+            }
+        });
+
+        // Panel 2: Column Chart
+        new Chart(document.getElementById('columnChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['MySQL', 'PostgreSQL', 'MongoDB', 'SQLite', 'Oracle', 'SQL Server', 'Redis', 'Cassandra', 'Elasticsearch', 'Firebase'],
+                datasets: [{
+                    label: 'Deseo',
+                    data: [85, 80, 75, 65, 55, 50, 45, 40, 35, 30],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCC99', '#C9CBCF', '#FFB6C1', '#FFD700']
+                }]
+            },
+            options: {
+                indexAxis: 'x',
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: context => context.raw } },
+                    datalabels: {
+                        display: true,
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: value => value,
+                        color: '#000'
+                    }
+                },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { beginAtZero: true }
+                },
+                plugins: { title: { display: true, text: 'Top 10 Bases de Datos Deseadas el Próximo Año' } }
+            }
+        });
+
+        // Panel 3: Tree Map
+        const treeMapWidth = document.getElementById('treeMap').clientWidth;
+        const treeMapHeight = document.getElementById('treeMap').clientHeight;
+        
+        const treeData = {
+            name: 'root',
+            children: [
+                { name: 'AWS', size: 30, color: '#FF6384' },
+                { name: 'Azure', size: 25, color: '#36A2EB' },
+                { name: 'Google Cloud', size: 20, color: '#FFCE56' },
+                { name: 'IBM Cloud', size: 15, color: '#4BC0C0' },
+                { name: 'Oracle Cloud', size: 10, color: '#9966FF' }
+            ]
+        };
+
+        const root = d3.hierarchy(treeData).sum(d => d.size);
+        const treemap = d3.treemap().size([treeMapWidth, treeMapHeight]).padding(5);
+        const nodes = treemap(root);
+
+        const svg = d3.select('#treeMap').append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .attr('viewBox', `0 0 ${treeMapWidth} ${treeMapHeight}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        svg.selectAll('rect')
+            .data(nodes.leaves())
+            .enter().append('rect')
+            .attr('x', d => d.x0)
+            .attr('y', d => d.y0)
+            .attr('width', d => d.x1 - d.x0)
+            .attr('height', d => d.y1 - d.y0)
+            .style('fill', d => d.data.color)
+            .style('stroke', '#fff')
+            .style('stroke-width', '1px');
+
+        svg.selectAll('text')
+            .data(nodes.leaves())
+            .enter().append('text')
+            .attr('x', d => d.x0 + 5)
+            .attr('y', d => d.y0 + 20)
+            .text(d => d.data.name)
+            .attr('font-size', '12px')
+            .attr('fill', '#000');
+
+        svg.append('text')
+            .attr('x', treeMapWidth / 2)
+            .attr('y', treeMapHeight - 20) // Título en la parte inferior
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '1.5rem')
+            .attr('font-weight', 'bold')
+            .style('background', '#fff')
+            .text('Plataformas Deseadas el Próximo Año');
+
+        // Panel 4: Hierarchy Bubble Chart
+        const bubbleWidth = document.getElementById('bubbleChart').clientWidth;
+        const bubbleHeight = document.getElementById('bubbleChart').clientHeight;
+
+        const bubbleData = {
+            name: 'root',
+            children: [
+                { name: 'React', size: 12, color: '#FF6384' },
+                { name: 'Angular', size: 11, color: '#36A2EB' },
+                { name: 'Vue', size: 10, color: '#FFCE56' },
+                { name: 'Svelte', size: 9, color: '#4BC0C0' },
+                { name: 'Ember', size: 8, color: '#9966FF' },
+                { name: 'Backbone', size: 7, color: '#FF9F40' },
+                { name: 'Aurelia', size: 6, color: '#FFCC99' },
+                { name: 'Knockout', size: 5, color: '#C9CBCF' },
+                { name: 'Polymer', size: 4, color: '#FFB6C1' },
+                { name: 'Meteor', size: 3, color: '#FFD700' }
+            ]
+        };
+
+        const bubbleLayout = d3.pack()
+            .size([bubbleWidth, bubbleHeight])
+            .padding(5);
+
+        const bubbleRoot = d3.hierarchy(bubbleData)
+            .sum(d => d.size);
+
+        const bubbleNodes = bubbleLayout(bubbleRoot).descendants();
+
+        const svgBubble = d3.select('#bubbleChart').append('svg')
+            .attr('width', '100%')
+            .attr('height', '100%')
+            .attr('viewBox', `0 0 ${bubbleWidth} ${bubbleHeight}`)
+            .attr('preserveAspectRatio', 'xMidYMid meet');
+
+        svgBubble.selectAll('circle')
+            .data(bubbleNodes)
+            .enter().append('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', d => d.r)
+            .style('fill', d => d.data.color)
+            .style('stroke', '#fff');
+
+        svgBubble.selectAll('text')
+            .data(bubbleNodes)
+            .enter().append('text')
+            .attr('x', d => d.x)
+            .attr('y', d => d.y)
+            .attr('text-anchor', 'middle')
+            .text(d => d.data.name)
+            .attr('font-size', '10px')
+            .attr('fill', '#fff');
+
+        svgBubble.append('text')
+            .attr('x', bubbleWidth / 2)
+            .attr('y', 30) // Ajustado para evitar solapamientos
+            .attr('text-anchor', 'middle')
+            .attr('font-size', '1.5rem')
+            .attr('font-weight', 'bold')
+            .text('Top 10 Marcos Web Deseados el Próximo Año');
+    </script>
+</body>
+</html>
